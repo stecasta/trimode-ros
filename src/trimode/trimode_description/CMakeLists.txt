@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(trimode_description)
 
-find_package(catkin REQUIRED COMPONENTS roslaunch)
+find_package(catkin REQUIRED COMPONENTS roslaunch jackal_description gazebo_ros gazebo_msgs gazebo_plugins gazebo_ros_control)
 
 catkin_package()
 
