@@ -1,0 +1,15 @@
+<launch>
+
+  <!--- Run gmapping -->
+  <include file="$(find trimode_navigation)/launch/include/gmapping.launch" />
+
+  <!--- Run Move Base -->
+  <include file="$(find trimode_navigation)/launch/include/move_base.launch" />
+  
+  <!-- Run ros-control and teleop nodes-->  
+  <include file="$(find trimode_control)/launch/control.launch" />
+  <include file="$(find trimode_control)/launch/teleop.launch">
+    <arg name="joystick" value="true"/>
+  </include>  
+
+</launch>

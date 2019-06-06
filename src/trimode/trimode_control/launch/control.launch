@@ -1,0 +1,41 @@
+<launch>
+  <rosparam command="load" file="$(find trimode_control)/config/control.yaml" />
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        args="trimode_joint_publisher trimode_velocity_controller" />
+  
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization"> 
+    <rosparam command="load" file="$(find trimode_control)/config/robot_localization.yaml" />
+  </node>
+
+<node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" > 
+  <param name="output_frame_id" value="kinect_link"/>
+  <param name="scan_height" value="10"/>
+  <param name="scan_time" value="0.05"/>
+  <remap from="image" to="/camera/depth/image_raw"/>
+</node>
+
+<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+  <param name="resolution" value="0.1" />     
+  <param name="frame_id" type="string" value="map" />
+  <param name="base_frame_id" type="string" value="base_footprint" />
+  <param name="sensor_model/max_range" value="5.0" />
+  <remap from="cloud_in" to="camera/depth/points" />
+</node> 
+
+<node pkg="grid_map_octomap" type="grid_map_octomap" name="grid_map_octomap">
+</node>
+
+<!--include file="$(find orb_slam2_ros)/ros/launch/orb_slam2_kinect.launch" /-->
+
+ <!--include file="$(find traversability_estimation)/launch/traversability_estimation.launch" />
+ <include file="$(find traversability_estimation)/launch/visualization.launch" />
+ <include file="$(find elevation_mapping_demos)/launch/simple_demo.launch" /-->
+ 
+  <node pkg="twist_mux" type="twist_mux" name="twist_mux">
+    <rosparam command="load" file="$(find trimode_control)/config/twist_mux.yaml" />
+    <remap from="cmd_vel_out" to="trimode_velocity_controller/cmd_vel"/>
+  </node>
+
+</launch>
+

@@ -1,0 +1,19 @@
+<launch>
+
+  <!-- Run the map server -->
+ <arg name="map_file" default="$(find trimode_navigation)/maps/jackal_race.yaml"/>
+ <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+  <!--- Run AMCL -->
+ <include file="$(find trimode_navigation)/launch/include/amcl.launch" />
+
+  <!--- Run Move Base -->
+ <include file="$(find trimode_navigation)/launch/include/move_base.launch" />
+ 
+  <!-- Run ros-control and teleop nodes-->  
+  <include file="$(find trimode_control)/launch/control.launch" />
+  <include file="$(find trimode_control)/launch/teleop.launch">
+    <arg name="joystick" value="true"/>
+  </include>
+
+</launch>
