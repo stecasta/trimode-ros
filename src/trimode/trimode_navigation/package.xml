@@ -15,8 +15,10 @@
   <run_depend>move_base</run_depend>
   <run_depend>urdf</run_depend>
   <run_depend>xacro</run_depend>
-
-
+  <run_depend>depthimage_to_laser_scan</run_depend>
+  <run_depend>grid_map_octomap</run_depend>
+  <run_depend>octomap_server</run_depend>
+  
   <export>
 
   </export>
