@@ -23,7 +23,7 @@ def _clip(value, minimum, maximum):
     return value
 
 class Motor:
-    def __init__(self):
+    #def __init__(self):
         #self._forward_pin = forward_pin
         #self._backward_pin = backward_pin
 
