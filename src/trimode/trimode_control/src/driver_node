@@ -46,8 +46,8 @@ class Motor:
             #self._forward_pwm.start(speed)
             #self._backward_pwm.start(0)
        
-       # Fill array for publishing
-       pwm.append(speed)
+        # Fill array for publishing
+        pwm.append(speed)
         
 class Driver:
     def __init__(self):
