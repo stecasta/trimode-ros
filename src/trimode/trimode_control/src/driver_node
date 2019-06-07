@@ -2,16 +2,18 @@
 
 import rospy
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int32MultiArray
 
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 
 # Set the GPIO modes
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+#GPIO.setmode(GPIO.BCM)
+#GPIO.setwarnings(False)
 
 _FREQUENCY = 20
 
+pwm = Int32MultiArray()
 
 def _clip(value, minimum, maximum):
     """Ensure value is between minimum and maximum."""
@@ -47,10 +49,14 @@ class Motor:
             #self._backward_pwm.start(0)
        
         # Fill array for publishing
-        pwm.append(speed)
+        pwm.data.append(speed)
         
 class Driver:
     def __init__(self):
+    
+        # Setup publisher
+        self.pub = rospy.Publisher('pwms', Int32MultiArray, queue_size=10)
+        
         rospy.init_node('driver')
 
         self._last_received = rospy.get_time()
@@ -73,10 +79,7 @@ class Driver:
         # Setup subscriber for velocity twist message
         rospy.Subscriber(
             'cmd_vel', Twist, self.velocity_received_callback)
-        
-        # Setup publisher
-        pub = rospy.Publisher('pwms', std_msgs.Int32MultiArray, queue_size=10)
-        
+              
     def velocity_received_callback(self, message):
         """Handle new velocity command message."""
 
@@ -118,8 +121,8 @@ class Driver:
             # may have lost contact with the commander-- stop
             # moving
             
-            # Initialize array to be published
-            pwm = []
+            # Empty array to be published
+            pwm.data = []
             
             delay = rospy.get_time() - self._last_received
             if delay < self._timeout:
@@ -134,15 +137,15 @@ class Driver:
                 self._right_back_motor.move(0)
 
                 # Publish pwms
-                pub.publish(std_msgs.int32MultiArray(pwm))
+                self.pub.publish(pwm)
             
             rate.sleep()
 
-    def main():
-        driver = Driver()
-
-        # Run driver. This will block
-        driver.run()
+def main():
+    driver = Driver()
+    
+    # Run driver. This will block
+    driver.run()
 
 if __name__ == '__main__':
     main()
