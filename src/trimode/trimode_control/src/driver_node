@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Int32MultiArray
+from trimode_control.msg import FloatList
 
 #import RPi.GPIO as GPIO
 
@@ -13,7 +13,7 @@ from std_msgs.msg import Int32MultiArray
 
 _FREQUENCY = 20
 
-pwm = Int32MultiArray()
+pwm = FloatList()
 
 def _clip(value, minimum, maximum):
     """Ensure value is between minimum and maximum."""
@@ -36,7 +36,7 @@ class Motor:
         #self._backward_pwm = GPIO.PWM(backward_pin, _FREQUENCY)
 
     def move(self, speed_percent):
-        speed = _clip(abs(speed_percent), 0, 100)
+        #speed = _clip(abs(speed_percent), 0, 100)
 
         # Positive speeds move wheels forward, negative speeds 
         # move wheels backward
@@ -55,7 +55,7 @@ class Driver:
     def __init__(self):
     
         # Setup publisher
-        self.pub = rospy.Publisher('pwms', Int32MultiArray, queue_size=10)
+        self.pub = rospy.Publisher('pwms', FloatList, queue_size=10)
         
         rospy.init_node('driver')
 
