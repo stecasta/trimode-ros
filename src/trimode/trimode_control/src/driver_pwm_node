@@ -23,15 +23,15 @@ def _clip(value, minimum, maximum):
     return value
 
 class Motor:
-    def __init__(self):
-        #self._forward_pin = forward_pin
-        #self._backward_pin = backward_pin
+    def __init__(self, forward_pin, backward_pin):
+        self._forward_pin = forward_pin
+        self._backward_pin = backward_pin
 
-        #GPIO.setup(forward_pin, GPIO.OUT)
-        #GPIO.setup(backward_pin, GPIO.OUT)
+        GPIO.setup(forward_pin, GPIO.OUT)
+        GPIO.setup(backward_pin, GPIO.OUT)
 
-        #self._forward_pwm = GPIO.PWM(forward_pin, _FREQUENCY)
-        #self._backward_pwm = GPIO.PWM(backward_pin, _FREQUENCY)
+        self._forward_pwm = GPIO.PWM(forward_pin, _FREQUENCY)
+        self._backward_pwm = GPIO.PWM(backward_pin, _FREQUENCY)
 
     def move(self, speed_percent):
         speed = _clip(abs(speed_percent), 0, 100)
@@ -39,16 +39,12 @@ class Motor:
         # Positive speeds move wheels forward, negative speeds 
         # move wheels backward
         if speed_percent < 0:
-            #self._backward_pwm.start(speed)
-            #self._forward_pwm.start(0)
-            speed = -speed
-        #else:
-            #self._forward_pwm.start(speed)
-            #self._backward_pwm.start(0)
-       
-       # Fill array for publishing
-       pwm.append(speed)
-        
+            self._backward_pwm.start(speed)
+            self._forward_pwm.start(0)
+        else:
+            self._forward_pwm.start(speed)
+            self._backward_pwm.start(0)
+
 class Driver:
     def __init__(self):
         rospy.init_node('driver')
@@ -61,11 +57,11 @@ class Driver:
 
         # Assign pins to motors. These may be distributed
         # differently depending on how you've built your robot
-        self._left_front_motor = Motor()
-        self._left_back_motor = Motor()
-        self._right_front_motor = Motor()
-        self._right_back_motor = Motor()        
-        self._left_front_speed_percent = 0
+        self._left_front_motor = Motor(10, 9)
+        self._left_back_motor = Motor(8, 7)
+        self._right_front_motor = Motor(10, 9)
+        self._right_back_motor = Motor(8, 7)        
+        self._left_fornt_speed_percent = 0
         self._left_back_speed_percent = 0
         self._right_front_speed_percent = 0
         self._right_back_speed_percent = 0
@@ -73,10 +69,7 @@ class Driver:
         # Setup subscriber for velocity twist message
         rospy.Subscriber(
             'cmd_vel', Twist, self.velocity_received_callback)
-        
-        # Setup publisher
-        pub = rospy.Publisher('pwms', std_msgs.Int32MultiArray, queue_size=10)
-        
+
     def velocity_received_callback(self, message):
         """Handle new velocity command message."""
 
@@ -105,8 +98,6 @@ class Driver:
         self._left_back_speed_percent = (100 * left_back_speed/self._max_speed)
         self._right_front_speed_percent = (100 * right_front_speed/self._max_speed)
         self._right_back_speed_percent = (100 * right_back_speed/self._max_speed)
-        
-        
 
     def run(self):
         """The control loop of the driver."""
@@ -117,10 +108,6 @@ class Driver:
             # If we haven't received new commands for a while, we
             # may have lost contact with the commander-- stop
             # moving
-            
-            # Initialize array to be published
-            pwm = []
-            
             delay = rospy.get_time() - self._last_received
             if delay < self._timeout:
                 self._left_front_motor.move(self._left_front_speed_percent)        
@@ -133,9 +120,6 @@ class Driver:
                 self._right_front_motor.move(0)
                 self._right_back_motor.move(0)
 
-                # Publish pwms
-                pub.publish(std_msgs.int32MultiArray(pwm))
-            
             rate.sleep()
 
     def main():
