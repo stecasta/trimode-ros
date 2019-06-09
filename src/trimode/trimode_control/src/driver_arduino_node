@@ -1,4 +1,5 @@
 /*
+rosrun rosserial_python serial_node.py /dev/ttyUSB0
  */
 
 #include <ros.h>
