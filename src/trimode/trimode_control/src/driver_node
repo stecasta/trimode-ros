@@ -40,10 +40,10 @@ class Motor:
 
         # Positive speeds move wheels forward, negative speeds 
         # move wheels backward
-        if speed_percent < 0:
+        #if speed_percent < 0:
             #self._backward_pwm.start(speed)
             #self._forward_pwm.start(0)
-            speed_percent = -speed_percent
+            #speed_percent = -speed_percent
         #else:
             #self._forward_pwm.start(speed)
             #self._backward_pwm.start(0)
