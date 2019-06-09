@@ -131,7 +131,7 @@ class Driver:
                 self._right_front_motor.move(self._right_front_speed_percent)
                 self._right_back_motor.move(self._right_back_speed_percent)
             else:
-                self._left_front_motor.move(0)        
+                self._left_front_motor.move(10)        
                 self._left_back_motor.move(0)
                 self._right_front_motor.move(0)
                 self._right_back_motor.move(0)
