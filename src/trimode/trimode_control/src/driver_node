@@ -120,26 +120,24 @@ class Driver:
             # If we haven't received new commands for a while, we
             # may have lost contact with the commander-- stop
             # moving
-           
+            
+            # Empty array to be published
+            pwm.data = []
             
             delay = rospy.get_time() - self._last_received
-            #if delay < self._timeout:
-            if 1:
+            if delay < self._timeout:
                 self._left_front_motor.move(self._left_front_speed_percent)        
                 self._left_back_motor.move(self._left_back_speed_percent)
                 self._right_front_motor.move(self._right_front_speed_percent)
                 self._right_back_motor.move(self._right_back_speed_percent)
             else:
-                self._left_front_motor.move(10)        
+                self._left_front_motor.move(0)        
                 self._left_back_motor.move(0)
                 self._right_front_motor.move(0)
                 self._right_back_motor.move(0)
 
-                # Publish pwms
-                self.pub.publish(pwm)
-                
-                # Empty array to be published next loop
-                pwm.data = []
+            # Publish pwms
+            self.pub.publish(pwm)
             
             rate.sleep()
 
