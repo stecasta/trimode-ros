@@ -43,13 +43,13 @@ class Motor:
         if speed_percent < 0:
             #self._backward_pwm.start(speed)
             #self._forward_pwm.start(0)
-            speed = -speed
+            speed_percent = -speed_percent
         #else:
             #self._forward_pwm.start(speed)
             #self._backward_pwm.start(0)
        
         # Fill array for publishing
-        pwm.data.append(speed)
+        pwm.data.append(speed_percent)
         
 class Driver:
     def __init__(self):
