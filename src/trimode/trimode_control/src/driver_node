@@ -49,7 +49,7 @@ class Motor:
             #self._backward_pwm.start(0)
        
         # Fill array for publishing
-        pwm.data.append(-speed_percent)
+        pwm.data.append(speed_percent)
         
 class Driver:
     def __init__(self):
