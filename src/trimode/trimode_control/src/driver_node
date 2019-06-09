@@ -123,7 +123,8 @@ class Driver:
            
             
             delay = rospy.get_time() - self._last_received
-            if delay < self._timeout:
+            #if delay < self._timeout:
+            if 1:
                 self._left_front_motor.move(self._left_front_speed_percent)        
                 self._left_back_motor.move(self._left_back_speed_percent)
                 self._right_front_motor.move(self._right_front_speed_percent)
