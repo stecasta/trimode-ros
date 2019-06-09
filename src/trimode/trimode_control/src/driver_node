@@ -60,7 +60,7 @@ class Driver:
         rospy.init_node('driver')
 
         self._last_received = rospy.get_time()
-        self._timeout = rospy.get_param('~timeout', 10000)
+        self._timeout = rospy.get_param('~timeout', 2)
         self._rate = rospy.get_param('~rate', 10)
         self._max_speed = rospy.get_param('~max_speed', 0.5)
         self._wheel_base = rospy.get_param('~wheel_base', 0.091)
@@ -120,9 +120,7 @@ class Driver:
             # If we haven't received new commands for a while, we
             # may have lost contact with the commander-- stop
             # moving
-            
-            # Empty array to be published
-            pwm.data = []
+           
             
             delay = rospy.get_time() - self._last_received
             if delay < self._timeout:
@@ -138,6 +136,9 @@ class Driver:
 
                 # Publish pwms
                 self.pub.publish(pwm)
+                
+                # Empty array to be published next loop
+                pwm.data = []
             
             rate.sleep()
 
