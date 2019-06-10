@@ -60,7 +60,7 @@ class Driver:
           direction = 0       # if no enable button is not pressed keep it 0 
           
         # Extract wheel index
-        wheel_idx = 0
+        wheel_idx = -1
         if msg.buttons[4]==1:
           wheel_idx = 0
         if msg.buttons[5]==1:
