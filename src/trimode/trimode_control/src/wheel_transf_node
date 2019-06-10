@@ -33,7 +33,7 @@ class Driver:
     def __init__(self):
     
         # Setup publisher
-        self.pub = rospy.Publisher('pwms', FloatList, queue_size=10)
+        self.pub = rospy.Publisher('pwms_wheel', FloatList, queue_size=10)
         
         rospy.init_node('wheel_transf')
 
@@ -92,7 +92,7 @@ class Driver:
             
             delay = rospy.get_time() - self._last_received
             if delay > self._timeout:
-                pwm.data = (9,9)
+                pwm.data = (0,0)
             
             # Publish pwms
             self.pub.publish(pwm)

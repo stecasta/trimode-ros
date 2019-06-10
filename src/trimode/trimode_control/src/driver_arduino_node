@@ -1,5 +1,6 @@
 /*
 rosrun rosserial_python serial_node.py /dev/ttyUSB0
+rosrun rosserial_python serial_node.py /dev/ttyACM0
  */
 
 #include <ros.h>
