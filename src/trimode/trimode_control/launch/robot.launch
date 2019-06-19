@@ -12,9 +12,9 @@
   </node>
   
   <!--Run wheel_transf node-->
-  <!--node pkg="trimode_control" type="wheel_transf_node" name="wheel_transf">
+  <node pkg="trimode_control" type="wheel_transf_node" name="wheel_transf">
   <remap from="/joy" to="/bluetooth_teleop/joy" />
-  </node-->
+  </node>
   
   <!--Run arduino nodes DANGEROUS AS FUCK TO ASSIGN PORTS LIKE THIS-->
     <node name="Arduino_driver"        pkg="rosserial_python"      type="serial_node.py">
