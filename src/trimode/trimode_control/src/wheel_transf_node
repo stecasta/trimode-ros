@@ -71,7 +71,7 @@ class Driver:
           wheel_idx = 3
           
         # Build vector
-        pwm.data = (wheel_idx, direction * 30)    
+        pwm.data = (wheel_idx, direction * 50)    
         
         #self._left_front_speed_percent = (100 * left_front_speed/self._max_speed)
         #self._left_back_speed_percent = (100 * left_back_speed/self._max_speed)
