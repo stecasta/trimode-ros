@@ -9,6 +9,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roslaunch</build_depend>
+  <build_depend>grid_map_ros</build_depend>
   <run_depend>amcl</run_depend>
   <run_depend>gmapping</run_depend>
   <run_depend>map_server</run_depend>
@@ -18,7 +19,8 @@
   <run_depend>depthimage_to_laserscan</run_depend>
   <run_depend>grid_map_octomap</run_depend>
   <run_depend>octomap_server</run_depend>
-  
+  <run_depend>octomap_server</run_depend>
+  <run_depend>freenect_launch</run_depend>
   <export>
 
   </export>

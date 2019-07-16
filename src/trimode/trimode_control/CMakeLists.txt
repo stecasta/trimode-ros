@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(trimode_control)
 
-find_package(catkin REQUIRED COMPONENTS rospy std_msgs roslaunch message_generation)
+find_package(catkin REQUIRED COMPONENTS rospy tf roscpp std_msgs roslaunch message_generation )
 
 add_message_files(
   FILES
@@ -13,7 +13,7 @@ generate_messages(
   std_msgs
 )
 
-catkin_package(CATKIN_DEPENDS message_runtime)
+catkin_package(CATKIN_DEPENDS message_runtime roscpp tf)
 
 roslaunch_add_file_check(launch/control.launch)
 roslaunch_add_file_check(launch/teleop.launch)
@@ -22,6 +22,15 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
+
+add_executable(odometry src/odometry.cpp)
+add_executable(wheel_transf_control src/wheel_transf_control.cpp)
+target_link_libraries(odometry ${catkin_LIBRARIES})
+target_link_libraries(wheel_transf_control ${catkin_LIBRARIES})
+#add_dependencies(grid2occupancy grid_map_ros)
+
+#find_package(grid_map_ros REQUIRED)
+#include_directories(${grid_map_ros_INCLUDE_DIRS})
 
 install(DIRECTORY config launch src
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

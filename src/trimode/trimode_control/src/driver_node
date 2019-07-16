@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
+#   0 left_front
+#   1 left_back
+#   2 right_front
+#   3 right_back
+
+import roslib
 import rospy
 from geometry_msgs.msg import Twist
 from trimode_control.msg import FloatList
+import PID
 
-#import RPi.GPIO as GPIO
-
-
-# Set the GPIO modes
-#GPIO.setmode(GPIO.BCM)
-#GPIO.setwarnings(False)
-
-_FREQUENCY = 20
-
-pwm = FloatList()
+pwms = FloatList()
 
 def _clip(value, minimum, maximum):
     """Ensure value is between minimum and maximum."""
@@ -23,33 +21,6 @@ def _clip(value, minimum, maximum):
     elif value > maximum:
         return maximum
     return value
-
-class Motor:
-    #def __init__(self):
-        #self._forward_pin = forward_pin
-        #self._backward_pin = backward_pin
-
-        #GPIO.setup(forward_pin, GPIO.OUT)
-        #GPIO.setup(backward_pin, GPIO.OUT)
-
-        #self._forward_pwm = GPIO.PWM(forward_pin, _FREQUENCY)
-        #self._backward_pwm = GPIO.PWM(backward_pin, _FREQUENCY)
-
-    def move(self, speed_percent):
-        #speed = _clip(abs(speed_percent), 0, 100)
-
-        # Positive speeds move wheels forward, negative speeds 
-        # move wheels backward
-        #if speed_percent < 0:
-            #self._backward_pwm.start(speed)
-            #self._forward_pwm.start(0)
-            #speed_percent = -speed_percent
-        #else:
-            #self._forward_pwm.start(speed)
-            #self._backward_pwm.start(0)
-       
-        # Fill array for publishing
-        pwm.data.append(speed_percent)
         
 class Driver:
     def __init__(self):
@@ -59,58 +30,94 @@ class Driver:
         
         rospy.init_node('driver')
 
-        self._last_received = rospy.get_time()
-        self._timeout = rospy.get_param('~timeout', 2)
-        self._rate = rospy.get_param('~rate', 10)
-        self._max_speed = rospy.get_param('~max_speed', 0.5)
+        self._last_received_cmd = rospy.get_time()
+        self._last_received_fb = rospy.get_time()
+        self._timeout = rospy.get_param('~timeout', 0.2)
+        self._rate = rospy.get_param('~rate', 100)
+        
+        self._max_wheel_speed = rospy.get_param('~max_wheel_radpersec', 1.36) 
         self._wheel_base = rospy.get_param('~wheel_base', 0.091)
-
-        # Assign pins to motors. These may be distributed
-        # differently depending on how you've built your robot
-        self._left_front_motor = Motor()
-        self._left_back_motor = Motor()
-        self._right_front_motor = Motor()
-        self._right_back_motor = Motor()        
-        self._left_front_speed_percent = 0
-        self._left_back_speed_percent = 0
-        self._right_front_speed_percent = 0
-        self._right_back_speed_percent = 0
-
+        self._wheel_radius = rospy.get_param('~wheel_radius', 0.13)
+       
+        self._left_front_speed = 0
+        self._left_back_speed = 0
+        self._right_front_speed = 0
+        self._right_back_speed = 0
+        
+        self.encoder_speeds = [0, 0, 0, 0]
+        
+        self.P = 1.2
+        self.I = 1
+        self.D = 0.001
+        
+        self.pid_left_front = PID.PID(self.P, self.I, self.D)
+        self.pid_left_back = PID.PID(self.P, self.I, self.D)
+        self.pid_right_front = PID.PID(self.P, self.I, self.D)
+        self.pid_right_back = PID.PID(self.P, self.I, self.D) 
+        
+        self.init_PID()     
+                        
         # Setup subscriber for velocity twist message
         rospy.Subscriber(
-            'cmd_vel', Twist, self.velocity_received_callback)
-              
-    def velocity_received_callback(self, message):
+            'cmd_vel', Twist, self.cmd_vel_callback)
+        
+        # Setup subscriber for velocity twist message
+        rospy.Subscriber(
+            'encoder_vel', FloatList, self.encoder_vel_callback)                 
+    
+    def init_PID(self):
+        self.pid_left_front.SetPoint = 0
+        self.pid_left_back.SetPoint = 0
+        self.pid_right_front.SetPoint = 0
+        self.pid_right_back.SetPoint = 0
+        
+        self.pid_left_front.setSampleTime(0.01)
+        self.pid_left_back.setSampleTime(0.01)
+        self.pid_right_front.setSampleTime(0.01)
+        self.pid_right_back.setSampleTime(0.01)
+        
+    def update_PID(self):   
+        self.pid_left_front.SetPoint = self._left_front_speed
+        self.pid_left_back.SetPoint = self._left_back_speed
+        self.pid_right_front.SetPoint = self._right_front_speed
+        self.pid_right_back.SetPoint = self._right_back_speed
+        self.pid_left_front.update(self.encoder_speeds[0])
+        self.pid_left_back.update(self.encoder_speeds[1])
+        self.pid_right_front.update(self.encoder_speeds[2])
+        self.pid_right_back.update(self.encoder_speeds[3])
+        rospy.logwarn("encoder left back: %.4f", self.encoder_speeds[1])
+        rospy.logwarn("cmd_vel left back: %.4f", self._left_back_speed)        
+        rospy.logwarn("error left front: %.2f", ((self.encoder_speeds[1] - self._left_back_speed) / (self._left_back_speed+0.00001)) * 100.0) 
+                    
+    def compute_pwm(self, wheel_vel):
+        # find out if there;s another way other than trial and error!
+        pwm = min(max(1.03 * (wheel_vel / self._max_wheel_speed)  * 256, -200), 200)
+        pwms.data.append(pwm)        
+               
+    def cmd_vel_callback(self, message):
         """Handle new velocity command message."""
 
-        self._last_received = rospy.get_time()
+        self._last_received_cmd = rospy.get_time()
 
         # Extract linear and angular velocities from the message
         linear = message.linear.x
         angular = message.angular.z
 
-        # Calculate wheel speeds in m/s
-        right_front_speed = linear + angular * self._wheel_base/2
-        right_back_speed = linear + angular * self._wheel_base/2 
- 
-        left_front_speed = linear - angular * self._wheel_base/2
-        left_back_speed = linear - angular * self._wheel_base/2        
-        
+        # Calculate wheel speeds in rad/s
+        self._right_front_speed = (linear + angular * self._wheel_base/2) / (self._wheel_radius * 2 * 3.1415)
+        self._right_back_speed = (linear + angular * self._wheel_base/2) / (self._wheel_radius * 2 * 3.1415)
+        self._left_front_speed = (linear - angular * self._wheel_base/2) / (self._wheel_radius * 2 * 3.1415)
+        self._left_back_speed = (linear - angular * self._wheel_base/2) / (self._wheel_radius * 2 * 3.1415)               
 
+    def encoder_vel_callback(self, msg):
+        """Handle new encoder message."""
 
-        # Ideally we'd now use the desired wheel speeds along
-        # with data from wheel speed sensors to come up with the
-        # power we need to apply to the wheels, but we don't have
-        # wheel speed sensors. Instead, we'll simply convert m/s
-        # into percent of maximum wheel speed, which gives us a
-        # duty cycle that we can apply to each motor.
-        self._left_front_speed_percent = (100 * left_front_speed/self._max_speed)
-        self._left_back_speed_percent = (100 * left_back_speed/self._max_speed)
-        self._right_front_speed_percent = (100 * right_front_speed/self._max_speed)
-        self._right_back_speed_percent = (100 * right_back_speed/self._max_speed)
-        
-        
+        # Get timestamp to check consistency.
+        self._last_received_fb = rospy.get_time()
 
+        # Extract wheel speeds in rad/s.
+        self.encoder_speeds = msg.data
+        
     def run(self):
         """The control loop of the driver."""
 
@@ -122,22 +129,29 @@ class Driver:
             # moving
             
             # Empty array to be published
-            pwm.data = []
+            pwms.data = []
             
-            delay = rospy.get_time() - self._last_received
-            if delay < self._timeout:
-                self._left_front_motor.move(self._left_front_speed_percent)        
-                self._left_back_motor.move(self._left_back_speed_percent)
-                self._right_front_motor.move(self._right_front_speed_percent)
-                self._right_back_motor.move(self._right_back_speed_percent)
+            delay_cmd = rospy.get_time() - self._last_received_cmd
+            delay_fb = rospy.get_time() - self._last_received_fb
+            if delay_cmd > self._timeout or delay_fb > self._timeout:
+                rospy.logwarn("timeout")
+                self.compute_pwm(0)        
+                self.compute_pwm(0)
+                self.compute_pwm(0)
+                self.compute_pwm(0)
             else:
-                self._left_front_motor.move(0)        
-                self._left_back_motor.move(0)
-                self._right_front_motor.move(0)
-                self._right_back_motor.move(0)
-
+                self.update_PID() 
+                rospy.logwarn("debug: %.2f", self.pid_left_back.output)                               
+                self.compute_pwm(self.pid_left_front.output)       
+               # self.compute_pwm(self._left_back_speed)
+                self.compute_pwm(self.pid_left_back.output)        
+                self.compute_pwm(self.pid_right_front.output)        
+                self.compute_pwm(self.pid_right_back.output)  
             # Publish pwms
-            self.pub.publish(pwm)
+            pwms.data[0] = 0
+            pwms.data[2] = 0
+            pwms.data[3] = 0
+            self.pub.publish(pwms)
             
             rate.sleep()
 

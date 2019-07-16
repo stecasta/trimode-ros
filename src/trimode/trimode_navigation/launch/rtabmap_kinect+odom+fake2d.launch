@@ -1,6 +1,7 @@
 <launch>
   <!-- Kinect cloud to laser scan -->
     <node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
+      <param name="output_frame_id" value="kinect_link"/>
       <remap from="image"       to="/camera/depth/image_raw"/>
       <remap from="camera_info" to="/camera/depth/camera_info"/>
       <remap from="scan"        to="/kinect_scan"/>

@@ -1,0 +1,32 @@
+<launch>
+
+
+  <!-- Run ros-control and teleop nodes-->  
+  <include file="$(find trimode_control)/launch/control.launch" />
+  <include file="$(find trimode_control)/launch/teleop.launch">
+    <!--arg name="joystick" value="true"/-->
+  </include>
+  
+  <!-- Run RTAB mapping -->
+ <include file="$(find trimode_navigation)/launch/rtabmap_kinect+odom+fake2d.launch" />
+
+  <!--- Run pose converter node -->
+  <node pkg="trimode_navigation" type="odom2pose_node.py" name="odom2pose_node">
+  <remap from="odom"    to="/odometry/filtered"/>
+  </node> 
+  
+  <!-- Run elevation mapping -->
+ <include file="$(find elevation_mapping_demos)/launch/simple_demo.launch" />  
+
+  <!-- Run traversability map -->
+ <include file="$(find traversability_estimation)/launch/traversability_estimation.launch" />
+   
+  <!--- Run Move Base 3d -->
+ <!--include file="$(find trimode_navigation)/launch/include/move_base_3d.launch" /-->
+
+  <!--- Run rviz -->
+ <include file="$(find trimode_viz)/launch/view_robot.launch">
+ <arg name="config"   value="gmapping"/>
+ </include>
+
+</launch>

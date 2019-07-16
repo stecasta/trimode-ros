@@ -15,13 +15,14 @@
     <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
     
     <remap from="odom" to="odometry/filtered" />
-    <remap from="map" to="/rtabmap/proj_map"/>
+    <!--remap from="map" to="/rtabmap/proj_map"/-->
+    <remap from="map" to="/traversability_map_visualization/traversability_map"/>
   </node>
   
-  <node name="voxel_grid_2_point_cloud" pkg="costmap_2d" type="costmap_2d_cloud">
+  <!--node name="voxel_grid_2_point_cloud" pkg="costmap_2d" type="costmap_2d_cloud">
     <remap from="voxel_grid" to="/move_base/local_costmap/obstacles_layer/voxel_grid"/>
     <remap from="voxel_marked_cloud" to="/move_base/local_costmap/obstacles_layer/marked_cloud"/>
     <remap from="voxel_unknown_cloud" to="/move_base/local_costmap/obstacles_layer/unknown_cloud"/>
-  </node>  
+  </node!-->  
 
 </launch>
