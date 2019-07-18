@@ -2,7 +2,6 @@
 #include <pluginlib/class_list_macros.h>
 #include <tf2/convert.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include<costmap_2d/costmap_layer.h>
 
 PLUGINLIB_EXPORT_CLASS(simple_layer_namespace::GridLayer, costmap_2d::Layer)
 
@@ -12,19 +11,18 @@ using costmap_2d::NO_INFORMATION;
 namespace simple_layer_namespace
 {
 
+
 GridLayer::GridLayer() {}
 
 void GridLayer::onInitialize()
 {
   ros::NodeHandle nh("~/" + name_);
-  default_value_ = -1;
   current_ = true;
+  default_value_ = NO_INFORMATION;
   matchSize();
-  first_update = true;
-
-  // initialize old_map!;
 
   global_frame_ = layered_costmap_->getGlobalFrameID();
+
 
   if (!nodeHandle_.param("traversability_topic", traversabilityTopic_, std::string("/traversability_map_visualization/traversability_map"))) {
     ROS_WARN("did not find elevation_topic, using default");
@@ -38,24 +36,12 @@ void GridLayer::onInitialize()
   dsrv_->setCallback(cb);
 }
 
+
 void GridLayer::matchSize()
 {
   Costmap2D* master = layered_costmap_->getCostmap();
-  Costmap2D* old_map = layered_costmap_->getCostmap();
   resizeMap(master->getSizeInCellsX(), master->getSizeInCellsY(), master->getResolution(),
             master->getOriginX(), master->getOriginY());
-  int index = 0;
-  for (unsigned int i = 0; i < master->getSizeInCellsX(); ++i)
-  {
-    for (unsigned int j = 0; j < master->getSizeInCellsY(); ++j)
-    {
-      costmap_[index] = 255;
-      old_map->setCost(i, j, -1);
-      master->setCost(i, j, -1);
-      index++;
-    }
-  }
-//  old_map = master;
 }
 
 void GridLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level)
@@ -66,48 +52,21 @@ void GridLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t 
 void GridLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x,
                                            double* min_y, double* max_x, double* max_y)
 {
-    if (!enabled_ || !traversabilityMapReceived_) {
-      return;
-    }
-
+  if (!enabled_)
+    return;
 // To do: replace the hardcoded values.
-  *min_x = robot_x - 2;
-  *min_y = robot_y - 2;
-  *max_x = robot_x + 2;
-  *max_y = robot_y + 2;
+  *min_x = robot_x - 2.5;
+  *min_y = robot_y - 2.5;
+  *max_x = robot_x + 2.5;
+  *max_y = robot_y + 2.5;
 
-//  unsigned int index = 0;
-
-//  // initialize the costmap with static data
-//  for (unsigned int i = 0; i < traversability_->info.width; ++i)
-//  {
-//    for (unsigned int j = 0; j < traversability_->info.height; ++j)
-//    {
-//      unsigned char value = traversability_->data[index];
-//      if (value == 255){
-//          continue;
-//      }
-////      costmap_[index] = interpretValue(value);
-//      costmap_[index] = value;
-////      if(worldToMap(mark_x, mark_y, mx, my)){
-////        setCost(i, j, traversability_->data[index]);
-////      }
-//      ++index;
-//    }
-//  }
 }
-
 
 void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i,
                             int max_j)
 {
     if (!enabled_ || !traversabilityMapReceived_) {
       return;
-    }
-
-    if (first_update){
-        old_map = master_grid;
-        first_update = false;
     }
 
   unsigned int mx, my;
@@ -138,55 +97,22 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
       // Set master_grid with cell from map
       if (worldToMap(p.x(), p.y(), mx, my))
       {
-          ROS_ERROR("cost: %d", getCost(mx, my));
-          if(getCost(mx, my) == 255){
-//              ROS_ERROR("cost: %d", old_cost);
-              master_grid.setCost(i, j, old_map.getCost(i,j));
-              continue;
-          }
           master_grid.setCost(i, j, getCost(mx, my));
-//          master_grid.setCost(i, j, -1);
-//          master_grid.setCost(i, j, std::max(getCost(mx, my), master_grid.getCost(i, j)));
       }
     }
   }
-  old_map = master_grid;
-}
 
-void GridLayer::updateWithMax(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
-{
-  if (!enabled_)
-    return;
-
-  unsigned char* master_array = master_grid.getCharMap();
-  unsigned int span = master_grid.getSizeInCellsX();
-
-  for (int j = min_j; j < max_j; j++)
-  {
-    unsigned int it = j * span + min_i;
-    for (int i = min_i; i < max_i; i++)
-    {
-      if (costmap_[it] == NO_INFORMATION){
-        it++;
-        continue;
-      }
-
-      unsigned char old_cost = master_array[it];
-      if (old_cost == NO_INFORMATION || old_cost < costmap_[it])
-        master_array[it] = costmap_[it];
-      it++;
-    }
-  }
 }
 
 unsigned char GridLayer::interpretValue(unsigned char value)
 {
-  if (value == 255){
-      return -1;
+
+  if (value == -1){
+      return costmap_2d::NO_INFORMATION;
   }
-//  double scale = (double) value / 100;
-//  return scale * 255;
-  return value;
+
+  double scale = (double) value / 100;
+  return scale * 255;
 }
 
 void GridLayer::traversabilityMapCallback(const nav_msgs::OccupancyGridConstPtr
@@ -215,9 +141,9 @@ void GridLayer::traversabilityMapCallback(const nav_msgs::OccupancyGridConstPtr
   unsigned int index = 0;
 
   // initialize the costmap with static data
-  for (unsigned int i = 0; i < traversability->info.width; ++i)
+  for (unsigned int i = 0; i < traversability->info.height; ++i)
   {
-    for (unsigned int j = 0; j < traversability->info.height; ++j)
+    for (unsigned int j = 0; j < traversability->info.width; ++j)
     {
       unsigned char value = traversability->data[index];
       costmap_[index] = interpretValue(value);

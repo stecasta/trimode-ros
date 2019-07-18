@@ -4,36 +4,25 @@ global_costmap:
    robot_base_frame: base_link
    update_frequency: 10.0
    publish_frequency: 5.0
-   width: 20.0
-   height: 20.0
+   width: 40.0
+   height: 40.0
    resolution: 0.03
-   origin_x: -10.0
-   origin_y: -10.0
+   origin_x: -20.0
+   origin_y: -20.0
    static_map: true
-   rolling_window: true
+   rolling_window: false
    trinary_costmap: false
-   
+   has_extra_bounds: true
+   track_unknown_space: true
 #   map_topic: /traversability_map_visualization/traversability_map
    unknown_cost_value: -1
 #   lethal_cost_threshold: 100
    
    plugins:
 #   - {name: static_layer, type: "costmap_2d::StaticLayer"}
-#   - {name: elevation_layer, type: "elevation_mapping_costmap_2d_plugin::ElevationLayer"}
 #   - {name: obstacles_layer, type: "costmap_2d::ObstacleLayer"}
 #   - {name: inflater_layer, type: "costmap_2d::InflationLayer"}
    - {name: trav_layer, type: "simple_layer_namespace::GridLayer"}
-
-#   elevation_layer:
-#     elevation_topic: /elevation_mapping/elevation_map_raw
-#     height_threshold: 1
-#     filter_chain_param_name: elevation
-#     elevation_layer_Name: elevation
-#     edges_layer_Name: edges
-  
-
-#static_layer:
-#  trinary_costmap: false
 
 #obstacles_layer:
 #  observation_sources: scan
