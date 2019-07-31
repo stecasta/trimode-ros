@@ -36,7 +36,7 @@ class Driver:
         self._rate = rospy.get_param('~rate', 100)
         
         self._max_wheel_speed = rospy.get_param('~max_wheel_radpersec', 1.36) 
-        self._wheel_base = rospy.get_param('~wheel_base', 0.091)
+        self._wheel_base = rospy.get_param('~wheel_base', 0.565)
         self._wheel_radius = rospy.get_param('~wheel_radius', 0.13)
        
         self._left_front_speed = 0
@@ -59,7 +59,7 @@ class Driver:
                         
         # Setup subscriber for velocity twist message
         rospy.Subscriber(
-            'cmd_vel', Twist, self.cmd_vel_callback)
+            'trimode_velocity_controller/cmd_vel', Twist, self.cmd_vel_callback)
         
         # Setup subscriber for velocity twist message
         rospy.Subscriber(

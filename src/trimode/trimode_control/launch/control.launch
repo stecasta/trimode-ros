@@ -5,7 +5,7 @@
         args="trimode_joint_publisher trimode_velocity_controller" />
   
   <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization"> 
-    <rosparam command="load" file="$(find trimode_control)/config/robot_localization.yaml" />
+    <rosparam command="load" file="$(find trimode_control)/config/robot_localization_sim.yaml" />
   </node>
   
   <!--node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" > 

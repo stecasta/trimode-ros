@@ -145,7 +145,7 @@
 <!-- KINECT -->
 <link name="kinect_link">
   <visual>
-    <origin xyz="0 0 0"/>
+    <origin xyz="0 0 -0.09"/>
     <geometry>
       <!--box size="0.064 0.121 0.0381" /-->
       <mesh filename="package://trimode_description/meshes/kinect.dae"/>
@@ -162,7 +162,7 @@
 </link>
 
 <joint name="kinect_joint" type="fixed">
-  <origin xyz="0.2 0 0.08" rpy="0 0 0" />
+  <origin xyz="0.2 0 ${0.08 + 0.09}" rpy="0 0 0" />
   <parent link="chassis_link" />
   <child link="kinect_link" />
 </joint>
@@ -282,6 +282,7 @@
     </inertial>
   </link>
   <joint name="imu_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <parent link="chassis_link" />
     <child link="imu_link" />
   </joint>

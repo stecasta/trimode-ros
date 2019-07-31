@@ -1,0 +1,12 @@
+#point_cloud_topic: "/camera/depth/points"
+point_cloud_topic: "/filt_cloud"
+map_frame_id: "map"
+robot_base_frame_id: "base_link"
+sensor_frame_id: "kinect_depth_optical_frame"
+robot_pose_with_covariance_topic: "/pose"
+robot_pose_cache_size: 200
+track_point_frame_id: "base_link"
+track_point_x: 0.0
+track_point_y: 0.0
+track_point_z: 0.0
+fused_map_publishing_rate: 10

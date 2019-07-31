@@ -55,7 +55,6 @@ void GridLayer::matchSize()
       index++;
     }
   }
-//  old_map = master;
 }
 
 void GridLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level)
@@ -75,28 +74,7 @@ void GridLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, d
   *min_y = robot_y - 2;
   *max_x = robot_x + 2;
   *max_y = robot_y + 2;
-
-//  unsigned int index = 0;
-
-//  // initialize the costmap with static data
-//  for (unsigned int i = 0; i < traversability_->info.width; ++i)
-//  {
-//    for (unsigned int j = 0; j < traversability_->info.height; ++j)
-//    {
-//      unsigned char value = traversability_->data[index];
-//      if (value == 255){
-//          continue;
-//      }
-////      costmap_[index] = interpretValue(value);
-//      costmap_[index] = value;
-////      if(worldToMap(mark_x, mark_y, mx, my)){
-////        setCost(i, j, traversability_->data[index]);
-////      }
-//      ++index;
-//    }
-//  }
 }
-
 
 void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i,
                             int max_j)
@@ -138,15 +116,11 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
       // Set master_grid with cell from map
       if (worldToMap(p.x(), p.y(), mx, my))
       {
-          ROS_ERROR("cost: %d", getCost(mx, my));
           if(getCost(mx, my) == 255){
-//              ROS_ERROR("cost: %d", old_cost);
               master_grid.setCost(i, j, old_map.getCost(i,j));
               continue;
           }
           master_grid.setCost(i, j, getCost(mx, my));
-//          master_grid.setCost(i, j, -1);
-//          master_grid.setCost(i, j, std::max(getCost(mx, my), master_grid.getCost(i, j)));
       }
     }
   }
@@ -184,9 +158,9 @@ unsigned char GridLayer::interpretValue(unsigned char value)
   if (value == 255){
       return -1;
   }
-//  double scale = (double) value / 100;
-//  return scale * 255;
-  return value;
+  double scale = (double) value / 100;
+  return scale * 255;
+//  return value;
 }
 
 void GridLayer::traversabilityMapCallback(const nav_msgs::OccupancyGridConstPtr

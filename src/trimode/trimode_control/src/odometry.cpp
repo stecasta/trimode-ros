@@ -7,33 +7,33 @@
 #include <tf/tf.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/console.h>
+#include <boost/assign.hpp>
 
-double vx, vy, vth;
+double left_back_velocity = 0, right_back_velocity = 0, left_front_velocity = 0, right_front_velocity = 0;
 
-void messageCb( const trimode_control::FloatList & msg) {
+void back_messageCb( const trimode_control::FloatList & msg) {
 
-    double wheel_base = 0.091;
-    double wheel_radius = 0.13;
+    left_back_velocity = msg.data[1];
+    right_back_velocity = msg.data[3];
+}
 
-    // Average from the two wheels on the same side, is there a better way?
-    double omega_left = (msg.data[0] + msg.data[1]) / 2;
-    double omega_right = (msg.data[2] + msg.data[3]) / 2;
+void front_messageCb( const trimode_control::FloatList & msg) {
 
-    double v_left = omega_left * wheel_radius;
-    double v_right = omega_right * wheel_radius;
-
-    vx = ((v_right + v_left) / 2);
-    vy = 0;
-    vth = ((v_right - v_left) / wheel_base);
+    left_front_velocity = msg.data[0];
+    right_front_velocity = msg.data[2];
 }
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "odometry_publisher");
 
   ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("encoder_vel", 100, messageCb);
-  ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
+  ros::Subscriber sub1 = n.subscribe("encoder_back_vel", 100, back_messageCb);
+  ros::Subscriber sub2 = n.subscribe("encoder_front_vel", 100, front_messageCb);
+  ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("/trimode_velocity_controller/odom", 100);
   tf::TransformBroadcaster odom_broadcaster;
+
+  double wheel_base = 0.565;
+  double wheel_radius = 0.12;
 
   double x = 0.0;
   double y = 0.0;
@@ -49,6 +49,21 @@ int main(int argc, char** argv){
     ros::spinOnce();               // check for incoming messages
     current_time = ros::Time::now();
     //ROS_WARN("vx_loop: %3f", vx);
+
+  // Average from the two wheels on the same side, is there a better way?
+  //  double omega_left = (left_back_velocity + left_front_velocity) / 2;
+  //  double omega_right = (right_back_velocity + right_front_velocity) / 2;
+    double omega_left = left_front_velocity;
+    double omega_right = right_front_velocity;
+//    ROS_ERROR("omega_left: %f", omega_left);
+//    ROS_ERROR("omega_right: %f", omega_right);
+    double v_left = omega_left * wheel_radius;
+    double v_right = omega_right * wheel_radius;
+
+    double vx = ((v_right + v_left) / 2);
+    double vy = 0;
+    double vth = ((v_right - v_left) / wheel_base);
+
     //compute odometry in a typical way given the velocities of the robot
     double dt = (current_time - last_time).toSec();
     double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
@@ -74,7 +89,8 @@ int main(int argc, char** argv){
     odom_trans.transform.rotation = odom_quat;
 
     //send the transform
-    odom_broadcaster.sendTransform(odom_trans);
+    // no need, we use odometry_filtered
+//    odom_broadcaster.sendTransform(odom_trans);
 
     //next, we'll publish the odometry message over ROS
     nav_msgs::Odometry odom;
@@ -87,11 +103,27 @@ int main(int argc, char** argv){
     odom.pose.pose.position.z = 0.0;
     odom.pose.pose.orientation = odom_quat;
 
+    //set position covariance
+    odom.pose.covariance =  boost::assign::list_of(1e-3) (0) (0)  (0)  (0)  (0)
+                                                         (0) (1e-3)  (0)  (0)  (0)  (0)
+                                                         (0)   (0)  (1e6) (0)  (0)  (0)
+                                                         (0)   (0)   (0) (1e6) (0)  (0)
+                                                         (0)   (0)   (0)  (0) (1e6) (0)
+                                                         (0)   (0)   (0)  (0)  (0)  (0.1) ;
+
     //set the velocity
     odom.child_frame_id = "base_link";
     odom.twist.twist.linear.x = vx;
     odom.twist.twist.linear.y = vy;
     odom.twist.twist.angular.z = vth;
+
+    //set velocity covariance
+    odom.twist.covariance =  boost::assign::list_of(1e-3) (0)   (0)  (0)  (0)  (0)
+                                                        (0) (1e-3)  (0)  (0)  (0)  (0)
+                                                        (0)   (0)  (1e6) (0)  (0)  (0)
+                                                        (0)   (0)   (0) (1e6) (0)  (0)
+                                                        (0)   (0)   (0)  (0) (1e6) (0)
+                                                        (0)   (0)   (0)  (0)  (0)  (0.1) ;
 
     //publish the message
     odom_pub.publish(odom);

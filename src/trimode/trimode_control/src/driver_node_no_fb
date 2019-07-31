@@ -62,8 +62,8 @@ class Driver:
         self._last_received = rospy.get_time()
         self._timeout = rospy.get_param('~timeout', 2)
         self._rate = rospy.get_param('~rate', 10)
-        self._max_speed = rospy.get_param('~max_speed', 0.5)
-        self._wheel_base = rospy.get_param('~wheel_base', 0.091)
+        self._max_speed = rospy.get_param('~max_speed', 1.36)
+        self._wheel_base = rospy.get_param('~wheel_base', 0.565)
 
         # Assign pins to motors. These may be distributed
         # differently depending on how you've built your robot
@@ -78,7 +78,7 @@ class Driver:
 
         # Setup subscriber for velocity twist message
         rospy.Subscriber(
-            'cmd_vel', Twist, self.velocity_received_callback)
+            'trimode_velocity_controller/cmd_vel', Twist, self.velocity_received_callback)
               
     def velocity_received_callback(self, message):
         """Handle new velocity command message."""
@@ -104,10 +104,10 @@ class Driver:
         # wheel speed sensors. Instead, we'll simply convert m/s
         # into percent of maximum wheel speed, which gives us a
         # duty cycle that we can apply to each motor.
-        self._left_front_speed_percent = (100 * left_front_speed/self._max_speed)
-        self._left_back_speed_percent = (100 * left_back_speed/self._max_speed)
-        self._right_front_speed_percent = (100 * right_front_speed/self._max_speed)
-        self._right_back_speed_percent = (100 * right_back_speed/self._max_speed)
+        self._left_front_speed_percent = min(max(1.03 * (left_front_speed / self._max_speed)  * 256, -200), 200)
+        self._left_back_speed_percent = min(max(1.03 * (left_back_speed / self._max_speed)  * 256, -200), 200)
+        self._right_front_speed_percent = min(max(1.03 * (right_back_speed / self._max_speed)  * 256, -200), 200)
+        self._right_back_speed_percent = min(max(1.03 * (right_back_speed / self._max_speed)  * 256, -200), 200)
         
         
 

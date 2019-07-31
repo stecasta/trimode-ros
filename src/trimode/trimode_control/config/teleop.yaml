@@ -1,10 +1,11 @@
 # Teleop configuration for PS3 Navigation joystick.
 teleop_twist_joy:
   axis_linear: 1
-  scale_linear: 0.4
-  scale_linear_turbo: 2.0
+  scale_linear: 0.5
+  scale_linear_turbo: 1
   axis_angular: 0
-  scale_angular: 1.4
+  scale_angular: 1      
+  scale_angular_turbo: 2  
   enable_button: 0
   enable_turbo_button: 1
 joy_node:

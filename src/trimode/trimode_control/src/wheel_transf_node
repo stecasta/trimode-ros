@@ -52,34 +52,24 @@ class Driver:
         self._last_received = rospy.get_time()
 
         # Extract direction
-        if msg.buttons[6]==1:
+        if msg.buttons[6] == 1:
           direction = -1      # backwards
-        elif msg.buttons[7]==1:
+        elif msg.buttons[7] == 1:
           direction = 1       # forward
         else:
           direction = 0       # if no enable button is not pressed keep it 0 
           
-        # Extract wheel index
-        wheel_idx = -1
+        # Build pwm msg
+        pwm.data = [0, 0, 0, 0]
         if msg.buttons[4]==1:
-          wheel_idx = 0
+          pwm.data[1] = direction * 60
         if msg.buttons[5]==1:
-          wheel_idx = 1
+          pwm.data[3] = direction * 60
         if msg.axes[2]==-1:
-          wheel_idx = 2
+          pwm.data[0] = direction * 60
         if msg.axes[5]==-1:
-          wheel_idx = 3
-          
-        # Build vector
-        pwm.data = (wheel_idx, direction * 60)    
-        
-        #self._left_front_speed_percent = (100 * left_front_speed/self._max_speed)
-        #self._left_back_speed_percent = (100 * left_back_speed/self._max_speed)
-        #self._right_front_speed_percent = (100 * right_front_speed/self._max_speed)
-        #self._right_back_speed_percent = (100 * right_back_speed/self._max_speed)
-        
-        
-
+          pwm.data[2] = direction * 60
+       
     def run(self):
         """The control loop of the driver."""
 
@@ -89,11 +79,11 @@ class Driver:
             # If we haven't received new commands for a while, we
             # may have lost contact with the commander-- stop
             # moving
-            
             delay = rospy.get_time() - self._last_received
             if delay > self._timeout:
-                pwm.data = (-1,0)
-            
+                pwm.data = [0, 0, 0, 0]
+#                for i in range(0, 4):
+#                    pwm.data.append(0)                                 
             # Publish pwms
             self.pub.publish(pwm)
             

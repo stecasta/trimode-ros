@@ -1,37 +1,84 @@
 <launch>
 
   <!-- Run ros-control and teleop nodes-->  
-  <!--include file="$(find trimode_control)/launch/control.launch" /-->
+  <include file="$(find trimode_control)/launch/control.launch"/>
   <include file="$(find trimode_control)/launch/teleop.launch">
     <!--arg name="joystick" value="true"/-->
   </include> 
   
   <!--Run driver node-->
   <node pkg="trimode_control" type="driver_node_no_fb" name="driver">
-  <remap from="/cmd_vel" to="/bluetooth_teleop/cmd_vel" />
+  <!--remap from="/cmd_vel" to="/bluetooth_teleop/cmd_vel" /-->
   </node>
   
   <!--Run wheel_transf node-->
   <node pkg="trimode_control" type="wheel_transf_node" name="wheel_transf">
   <remap from="/joy" to="/bluetooth_teleop/joy" />
   </node>
-  
-  <!--Run wheel_transf node-->
+  <!--HANDLE THE COHEXISTANCE OF THE 2 TRANSF NODES-->
+  <!--Run transf_control node-->
   <!--node pkg="trimode_control" type="wheel_transf_control" name="wheel_transf_control">
-  </node-->  
+  <remap from="/joy" to="/bluetooth_teleop/joy" />
+  </node-->
   
+    <!--Run odometry node-->
+  <node pkg="trimode_control" type="odometry" name="odometry">
+  </node>
+       
   <!--Run arduino nodes DANGEROUS TO ASSIGN PORTS LIKE THIS-->
     <node name="Arduino_driver"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyACM1"/>
-    </node>
-    <node name="Arduino_wheel_transf"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyACM0"/>
     </node>
-    <!--node name="Arduino_read_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB0"/>
-    </node-->    
-    <node name="Arduino_read_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB0"/>
+    <!--node name="Arduino_wheel_transf"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyACM0"/>
+    </node-->
+    <node name="Arduino_read_front_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB2"/>
     </node>    
+    <!--node name="Arduino_read_back_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB2"/>
+    </node-->   
+    <!--node name="Arduino_read_left_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB0"/>
+    </node-->
+    <!--node name="Arduino_read_right_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB4"/>
+    </node-->
+    <node name="Arduino_IMU"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB1"/>
+    </node>         
+
+   <include file="$(find trimode_navigation)/launch/rtabmap_kinect+odom+fake2d.launch" />
+    
+      <!-- Load Trimode's description -->
+  <include file="$(find trimode_description)/launch/description.launch">
+    <arg name="config" value="base" />
+  </include>
   
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  
+    <!--- Run rviz -->
+    <include file="$(find trimode_viz)/launch/view_robot.launch">
+      <arg name="config"   value="gmapping"/>
+    </include> 
+    
+    <include file="$(find openni_launch)/launch/openni.launch">
+      <arg name="depth_frame_id"     value="kinect_depth_optical_frame"/>  
+      <arg name="rgb_frame_id"     value="kinect_depth_optical_frame"/>
+    </include>
+    
+    <!--- Run pose converter node -->
+  <node pkg="trimode_navigation" type="odom2pose_node.py" name="odom2pose_node">
+  <remap from="odom"    to="/odometry/filtered"/>
+  </node>
+  
+    <!-- Run elevation mapping -->
+ <include file="$(find elevation_mapping_demos)/launch/simple_demo.launch" />  
+
+  <!-- Run traversability map -->
+ <include file="$(find traversability_estimation)/launch/traversability_estimation.launch" />
+   
+  <!--- Run Move Base 3d -->
+ <include file="$(find trimode_navigation)/launch/include/move_base_3d.launch" />
+
 </launch>

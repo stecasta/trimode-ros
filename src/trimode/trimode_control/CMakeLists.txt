@@ -19,7 +19,7 @@ roslaunch_add_file_check(launch/control.launch)
 roslaunch_add_file_check(launch/teleop.launch)
 
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -27,12 +27,18 @@ add_executable(odometry src/odometry.cpp)
 add_executable(wheel_transf_control src/wheel_transf_control.cpp)
 target_link_libraries(odometry ${catkin_LIBRARIES})
 target_link_libraries(wheel_transf_control ${catkin_LIBRARIES})
-#add_dependencies(grid2occupancy grid_map_ros)
 
+add_dependencies(odometry odometry_gencpp)
+
+add_dependencies(odometry ${catkin_EXPORTED_TARGETS})
+add_dependencies(wheel_transf_control ${catkin_EXPORTED_TARGETS})
+#add_dependencies(grid2occupancy grid_map_ros)
+add_dependencies(odometry trimode_control_msgs_generate_messages_cpp)
+add_dependencies(wheel_transf_control trimode_control_msgs_generate_messages_cpp)
 #find_package(grid_map_ros REQUIRED)
 #include_directories(${grid_map_ros_INCLUDE_DIRS})
 
-install(DIRECTORY config launch src
+install(DIRECTORY config launch src msg srv
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
