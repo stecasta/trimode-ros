@@ -51,10 +51,10 @@ int main(int argc, char** argv){
     //ROS_WARN("vx_loop: %3f", vx);
 
   // Average from the two wheels on the same side, is there a better way?
-  //  double omega_left = (left_back_velocity + left_front_velocity) / 2;
-  //  double omega_right = (right_back_velocity + right_front_velocity) / 2;
-    double omega_left = left_front_velocity;
-    double omega_right = right_front_velocity;
+    double omega_left = (left_back_velocity + left_front_velocity) / 2;
+    double omega_right = (right_back_velocity + right_front_velocity) / 2;
+//    double omega_left = left_front_velocity;
+//    double omega_right = right_front_velocity;
 //    ROS_ERROR("omega_left: %f", omega_left);
 //    ROS_ERROR("omega_right: %f", omega_right);
     double v_left = omega_left * wheel_radius;

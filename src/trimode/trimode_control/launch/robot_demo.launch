@@ -1,13 +1,14 @@
 <launch>
 
   <!-- Run ros-control and teleop nodes-->  
+  <include file="$(find trimode_control)/launch/control.launch"/>
   <include file="$(find trimode_control)/launch/teleop.launch">
     <!--arg name="joystick" value="true"/-->
   </include> 
   
   <!--Run driver node-->
   <node pkg="trimode_control" type="driver_node_no_fb" name="driver">
-  <remap from="/cmd_vel" to="/bluetooth_teleop/cmd_vel" />
+  <!--remap from="/cmd_vel" to="/bluetooth_teleop/cmd_vel" /-->
   </node>
   
   <!--Run wheel_transf node-->
@@ -32,20 +33,20 @@
     <param name="port"              type="string"               value="/dev/ttyACM0"/>
     </node-->
     <node name="Arduino_read_front_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB2"/>
+    <param name="port"              type="string"               value="/dev/ttyUSB3"/>
     </node>    
-    <!--node name="Arduino_read_back_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB2"/>
-    </node-->   
-    <!--node name="Arduino_read_left_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB0"/>
-    </node-->
-    <!--node name="Arduino_read_right_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyUSB4"/>
-    </node-->
-    <node name="Arduino_IMU"        pkg="rosserial_python"      type="serial_node.py">
+    <node name="Arduino_read_back_encoder"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB1"/>
-    </node>     
+    </node>   
+    <node name="Arduino_read_left_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB0"/>
+    </node>
+    <node name="Arduino_read_right_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB4"/>
+    </node>
+    <node name="Arduino_IMU"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyUSB2"/>
+    </node>            
     
     
 
