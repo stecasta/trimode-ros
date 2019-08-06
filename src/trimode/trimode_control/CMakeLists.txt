@@ -8,6 +8,11 @@ add_message_files(
   FloatList.msg
 )
 
+add_service_files(
+  FILES
+  TransformWheels.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs

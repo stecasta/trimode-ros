@@ -29,21 +29,21 @@
     <node name="Arduino_driver"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyACM0"/>
     </node>
-    <!--node name="Arduino_wheel_transf"        pkg="rosserial_python"      type="serial_node.py">
-    <param name="port"              type="string"               value="/dev/ttyACM0"/>
-    </node-->
+    <node name="Arduino_wheel_transf"        pkg="rosserial_python"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyACM1"/>
+    </node>
     <node name="Arduino_read_front_encoder"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB3"/>
     </node>    
     <node name="Arduino_read_back_encoder"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB1"/>
     </node>   
-    <!--node name="Arduino_read_left_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    <node name="Arduino_read_left_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB0"/>
-    </node-->
-    <!--node name="Arduino_read_right_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
+    </node>
+    <node name="Arduino_read_right_transf_encoder"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB4"/>
-    </node-->
+    </node>
     <node name="Arduino_IMU"        pkg="rosserial_python"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyUSB2"/>
     </node>         
@@ -79,6 +79,6 @@
  <include file="$(find traversability_estimation)/launch/traversability_estimation.launch" />
    
   <!--- Run Move Base 3d -->
- <include file="$(find trimode_navigation)/launch/include/move_base_3d.launch" />
+ <!--include file="$(find trimode_navigation)/launch/include/move_base_3d.launch" /-->
 
 </launch>

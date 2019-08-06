@@ -1,6 +1,4 @@
 <launch>
-
-
   <!-- Run ros-control and teleop nodes-->  
   <include file="$(find trimode_control)/launch/control.launch" />
   <include file="$(find trimode_control)/launch/teleop.launch">
@@ -26,7 +24,7 @@
 
   <!--- Run rviz -->
  <include file="$(find trimode_viz)/launch/view_robot.launch">
- <arg name="config"   value="gmapping"/>
+ <arg name="config"   value="trav"/>
  </include>
 
 </launch>

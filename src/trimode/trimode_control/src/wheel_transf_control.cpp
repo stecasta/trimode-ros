@@ -8,7 +8,7 @@
 #include <nav_msgs/Odometry.h>
 #include <ros/console.h>
 #include <sensor_msgs/Joy.h>
-#include <trimode_control/BoolList.h>
+//#include <trimode_control/BoolList.h>
 #include <trimode_control/TransformWheels.h>
 
 /*
@@ -39,197 +39,194 @@ bool msg_received = false;
 
 class Robot {
 public:
-  Robot(ros::NodeHandle& n) {
+    Robot(ros::NodeHandle& n) {
 
-      sub_right = n.subscribe("encoder_right_vel_transf", 1000, &Robot::right_messageCb, this);
-      sub_left = n.subscribe("encoder_left_vel_transf", 1000, &Robot::left_messageCb, this);
+        sub_right = n.subscribe("encoder_right_vel_transf", 1000, &Robot::right_messageCb, this);
+        sub_left = n.subscribe("encoder_left_vel_transf", 1000, &Robot::left_messageCb, this);
 
-      sub_joy = n.subscribe("joy", 1000, &Robot::Joy_messageCb, this);
-      sub_home_right = n.subscribe("home_right_position", 1000, &Robot::home_right_messageCb, this);
-      sub_home_left = n.subscribe("home_left_position", 1000, &Robot::home_left_messageCb, this);
+        sub_joy = n.subscribe("joy", 1000, &Robot::Joy_messageCb, this);
+        sub_home_right = n.subscribe("home_right_position", 1000, &Robot::home_right_messageCb, this);
+        sub_home_left = n.subscribe("home_left_position", 1000, &Robot::home_left_messageCb, this);
 
-      pwm_pub = n.advertise<trimode_control::FloatList>("pwms_wheel", 100, this);
-      service = n.advertiseService("transform_wheels", &Robot::transform_wheels_srv, this);
+        pwm_pub = n.advertise<trimode_control::FloatList>("pwms_wheel", 100, this);
+        service = n.advertiseService("transform_wheels", &Robot::transform_wheels_srv, this);
 
-      ros::Time current_time, last_time;
-      current_time = ros::Time::now();
-      last_time = ros::Time::now();
-  }
+        ros::Time current_time, last_time;
+        current_time = ros::Time::now();
+        last_time = ros::Time::now();
+    }
 
-  bool transform_wheels_srv(trimode_control::TransformWheels::Request  &req,
-                        trimode_control::TransformWheels::Response &res){
-  // make the requests 1 touch -- no reason for them not to be
+    bool transform_wheels_srv(trimode_control::TransformWheels::Request  &req,
+                              trimode_control::TransformWheels::Response &res){
 
-  // how to give the answer that it's done? A service in the other direction?? or do everything here??
-  // the latter is more appropriate for a service and safer for the robot, no problem but you have to pub here i think
-//      command_ = req.command;
-      if (msg_received && home_registered){
-              transform_wheels_(req.command);
-              res.done = true;
-      }
-      else{
-          res.done = false;
-      }
-      ROS_INFO("request: command = %ld", (long int)req.command);
-      ROS_INFO("sending back response: [%ld]", (long int)res.done);
-      return true;
-  }
+        ROS_INFO("request: command = %ld", (long int)req.command);
 
-  void transform_wheels_(int command){
+        if (msg_received && home_registered){
+            transform_wheels_(req.command);
+            res.done = true;
+        }
+        else{
+            res.done = false;
+        }
+        ROS_INFO("sending back response: [%ld]", (long int)res.done);
+        return true;
+    }
 
-      ros::Rate r(20);
+    void transform_wheels_(int command){
 
-      bool transformation_done = false;
+        ros::Rate r(20);
 
-      while (!transformation_done){
-// you are not checking for the command anymore!!
-          // Initialize with zero values.
-          pwm.data[0] = 0;
-          pwm.data[1] = 0;
-          pwm.data[2] = 0;
-          pwm.data[3] = 0;
+        bool transformation_done = false;
 
-          ros::spinOnce();               // check for incoming messages
+        while (!transformation_done){
+            // you are not checking for the command anymore!!
+            // Initialize with zero values.
+            pwm.data[0] = 0;
+            pwm.data[1] = 0;
+            pwm.data[2] = 0;
+            pwm.data[3] = 0;
 
-          int sum = 0;
-          for (int idx = 0; idx < 4; idx++){
-              if (command == 1){
-                  if (pulses[idx] > -CLAW2ROUND[idx]){
-                      pwm.data[idx] = PWM_VALUE;
-                  }
-                  else sum++;
-              }
-              if (command == -1){
-                  if (pulses[idx] < 0){
-                      pwm.data[idx] = -PWM_VALUE;
-                  }
-                  else sum++;
-              }
-              if (command == 2){
-                  if(pulses[idx] > -CLAW2ARC[idx]){
-                      pwm.data[idx] = PWM_VALUE;
-                  }
-                  else sum++;
-              }
-              if (command == -2){
-                  if(pulses[idx] < -CLAW2ROUND[idx]){
-                      pwm.data[idx] = -PWM_VALUE;
-                  }
-                  else sum++;
-              }
-          }
-          if (sum == 4) transformation_done = true;
+            ros::spinOnce();               // check for incoming messages
 
-          pwm_pub.publish(pwm);
-          r.sleep();
-      }
-  }
+            int sum = 0;
+            for (int idx = 0; idx < 4; idx++){
+                if (command == 1){
+                    if (pulses[idx] >= -CLAW2ROUND[idx]){
+                        pwm.data[idx] = PWM_VALUE;
+                    }
+                    else sum++;
+                }
+                if (command == -1){
+                    if (pulses[idx] <= 0){
+                        pwm.data[idx] = -PWM_VALUE;
+                    }
+                    else sum++;
+                }
+                if (command == 2){
+                    if(pulses[idx] >= -CLAW2ARC[idx]){
+                        pwm.data[idx] = PWM_VALUE;
+                    }
+                    else sum++;
+                }
+                if (command == -2){
+                    if(pulses[idx] <= -CLAW2ROUND[idx]){
+                        pwm.data[idx] = -PWM_VALUE;
+                    }
+                    else sum++;
+                }
+            }
+            if (sum == 4) transformation_done = true;
 
-  void right_messageCb( const trimode_control::FloatList & msg) {
+            pwm_pub.publish(pwm);
+            r.sleep();
+        }
+    }
 
-      msg_received = true;
+    void right_messageCb( const trimode_control::FloatList & msg) {
 
-      pulses[2] = msg.data[2];
-      pulses[3] = msg.data[3];
+        msg_received = true;
 
-      // Initializing pwm msg. CHANGE THIS LIKE ARDUINO
-      pwm = msg;
-      pwm.data[0] = 0;
-      pwm.data[1] = 0;
-      pwm.data[2] = 0;
-      pwm.data[3] = 0;
+        pulses[2] = msg.data[2];
+        pulses[3] = msg.data[3];
 
-  }
+        // Initializing pwm msg. CHANGE THIS LIKE ARDUINO
+        pwm = msg;
+        pwm.data[0] = 0;
+        pwm.data[1] = 0;
+        pwm.data[2] = 0;
+        pwm.data[3] = 0;
 
-  void left_messageCb( const trimode_control::FloatList & msg) {
-  //ADD CONTROL
-  //    msg_received = true;
+    }
 
-      pulses[0] = msg.data[0];
-      pulses[1] = msg.data[1];
-  }
+    void left_messageCb( const trimode_control::FloatList & msg) {
+        //ADD CONTROL
+        //    msg_received = true;
 
-  void home_right_messageCb( const trimode_control::FloatList & home_msg) {
-      home_[2] = home_msg.data[2];
-      home_[3] = home_msg.data[3];
-  }
-  void home_left_messageCb( const trimode_control::FloatList & home_msg) {
+        pulses[0] = msg.data[0];
+        pulses[1] = msg.data[1];
+    }
 
-      home_[0] = home_msg.data[0];
-      home_[1] = home_msg.data[1];
-  }
+    void home_right_messageCb( const trimode_control::FloatList & home_msg) {
+        home_[2] = home_msg.data[2];
+        home_[3] = home_msg.data[3];
+    }
+    void home_left_messageCb( const trimode_control::FloatList & home_msg) {
 
-  void Joy_messageCb( const sensor_msgs::Joy & joy_msg) {
+        home_[0] = home_msg.data[0];
+        home_[1] = home_msg.data[1];
+    }
 
-      command_ = 0;
-      if (joy_msg.buttons[1] == 1 && joy_msg.buttons[7] == 1){
-          command_ = 1;  // From round to claw.
-      }
-      else if ((joy_msg.buttons[1] == 1 && joy_msg.buttons[6] == 1)){
-          command_ = -1;  // From claw to round.
-      }
-      else if ((joy_msg.buttons[3] == 1 && joy_msg.buttons[7] == 1)){
-          command_ = 2;  // From arc to round.
-      }
-      else if ((joy_msg.buttons[3] == 1 && joy_msg.buttons[6] == 1)){
-          command_ = -2;  // From round to arc.
-      }
-  }
+    void Joy_messageCb( const sensor_msgs::Joy & joy_msg) {
 
-  void run() {
+        command_ = 0;
+        if (joy_msg.buttons[1] == 1 && joy_msg.buttons[7] == 1){
+            command_ = 1;  // From claw to round.
+        }
+        else if ((joy_msg.buttons[1] == 1 && joy_msg.buttons[6] == 1)){
+            command_ = -1;  // Transform to claw mode.
+        }
+        else if ((joy_msg.buttons[3] == 1 && joy_msg.buttons[7] == 1)){
+            command_ = 2;  // Transform in arc mode.
+        }
+        else if ((joy_msg.buttons[3] == 1 && joy_msg.buttons[6] == 1)){
+            command_ = -2;  // From arc to round.
+        }
+    }
 
-      ros::Rate r(20);
-      while (ros::ok)
-      {
-          ros::spinOnce();               // check for incoming messages
-          //pwm.data[idx] = 0;    //initialize at start of node
+    void run() {
 
-          //          current_time = ros::Time::now();
-          //          double dt = (current_time - last_time).toSec();
+        ros::Rate r(20);
+        while (ros::ok)
+        {
+            ros::spinOnce();               // check for incoming messages
+            //pwm.data[idx] = 0;    //initialize at start of node
 
-          //add check on transf encoder msg too!!
-          if (msg_received){
-              // Move wheel motor to home position on initialize.
-              if (!home_registered){
-                  int sum_of_home = 0;
-                  for (int idx = 0; idx < 4; idx++){
-                      if(!single_home_registered[idx]){
-                          if(!home_[idx]){
-                              pwm.data[idx] = -PWM_VALUE;
-                          }
-                          else {single_home_registered[idx] = true;
-                          }
-                      }
-                      sum_of_home += single_home_registered[idx];
-                  }
-                  if(sum_of_home == 4){
-                      home_registered = true;
-                  }
-              }
-              else{
-                  transform_wheels_(command_);
-              }
-          }
+            //          current_time = ros::Time::now();
+            //          double dt = (current_time - last_time).toSec();
 
-          //publish the message
-          pwm_pub.publish(pwm);
+            //add check on transf encoder msg too!!
+            if (msg_received){
+                // Move wheel motor to home position on initialize.
+                if (!home_registered){
+                    int sum_of_home = 0;
+                    for (int idx = 0; idx < 4; idx++){
+                        if(!single_home_registered[idx]){
+                            if(!home_[idx]){
+                                pwm.data[idx] = -PWM_VALUE;
+                            }
+                            else {single_home_registered[idx] = true;
+                            }
+                        }
+                        sum_of_home += single_home_registered[idx];
+                    }
+                    if(sum_of_home == 4){
+                        home_registered = true;
+                    }
+                }
+                else{
+                    transform_wheels_(command_);
+                }
+            }
 
-          //          last_time = current_time;
-          r.sleep();
-      }
-      //    }
-  }
+            //publish the message
+            pwm_pub.publish(pwm);
+
+            //          last_time = current_time;
+            r.sleep();
+        }
+        //    }
+    }
 protected:
 
-  ros::Subscriber sub_right;
-  ros::Subscriber sub_left;
+    ros::Subscriber sub_right;
+    ros::Subscriber sub_left;
 
-  ros::Subscriber sub_joy;
-  ros::Subscriber sub_home_right;
-  ros::Subscriber sub_home_left;
+    ros::Subscriber sub_joy;
+    ros::Subscriber sub_home_right;
+    ros::Subscriber sub_home_left;
 
-  ros::Publisher pwm_pub;
-  ros::ServiceServer service;
+    ros::Publisher pwm_pub;
+    ros::ServiceServer service;
 };
 
 int main(int argc, char** argv){

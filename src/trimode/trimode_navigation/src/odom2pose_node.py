@@ -19,8 +19,8 @@ if __name__=='__main__':
     rospy.init_node('odom2pose')
    
     sub=rospy.Subscriber('odom', Odometry, fnc_callback)
-    pub=rospy.Publisher('pose', PoseWithCovarianceStamped, queue_size=1)
-    rate=rospy.Rate(20)
+    pub=rospy.Publisher('pose', PoseWithCovarianceStamped, queue_size=1000)
+    rate=rospy.Rate(50)
  
     while not rospy.is_shutdown():
    

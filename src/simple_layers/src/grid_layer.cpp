@@ -2,7 +2,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <tf2/convert.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include<costmap_2d/costmap_layer.h>
+#include <costmap_2d/costmap_layer.h>
 
 PLUGINLIB_EXPORT_CLASS(simple_layer_namespace::GridLayer, costmap_2d::Layer)
 
@@ -21,6 +21,7 @@ void GridLayer::onInitialize()
   current_ = true;
   matchSize();
   first_update = true;
+  lethal_threshold_ = 70;
 
   // initialize old_map!;
 
@@ -155,12 +156,15 @@ void GridLayer::updateWithMax(costmap_2d::Costmap2D& master_grid, int min_i, int
 
 unsigned char GridLayer::interpretValue(unsigned char value)
 {
-  if (value == 255){
+  if (value == 255)
       return -1;
+  else if (value >= lethal_threshold_){
+    return LETHAL_OBSTACLE;
   }
-  double scale = (double) value / 100;
-  return scale * 255;
-//  return value;
+
+//  double scale = (double) value / lethal_threshold_;
+//  return scale * LETHAL_OBSTACLE;
+  return value;
 }
 
 void GridLayer::traversabilityMapCallback(const nav_msgs::OccupancyGridConstPtr

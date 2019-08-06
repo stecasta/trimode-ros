@@ -63,6 +63,7 @@ private:
   std::string map_frame_;  /// @brief frame that map is located in
   unsigned int x_, y_, width_, height_, size_x_, size_y_, resolution_, origin_x_, origin_y_;
   bool first_update;
+  unsigned char lethal_threshold_;
   
   costmap_2d::Costmap2D old_map;
 
