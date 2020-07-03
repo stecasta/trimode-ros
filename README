@@ -1,4 +1,4 @@
-# Software for Trimode robot
+- Software for Trimode robot
 
 # load gazebo model
 roslaunch jackal_gazebo jackal_world.launch
